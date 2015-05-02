@@ -51,8 +51,7 @@ export default class BinarySearchTree {
   }
 
   traverseDF(cb) {
-    let left = this._root.get('left'),
-        right = this._root.get('right');
+    let left = this._root.get('left'), right = this._root.get('right');
     cb(this._root.get('data'));
     if (left) left.traverseDF(cb);
     if (right) right.traverseDF(cb);
@@ -61,9 +60,7 @@ export default class BinarySearchTree {
   traverseBF(cb) {
     let q = [], current = this;
     while (current && current !== null) {
-      let _root = current._root,
-          left = _root.get('left'),
-          right = _root.get('right');
+      let _root = current._root, left = _root.get('left'), right = _root.get('right');
       cb(_root.get('data'));
       if (left !== null) q.push(left);
       if (right !== null) q.push(right);
