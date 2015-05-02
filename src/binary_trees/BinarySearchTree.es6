@@ -5,7 +5,7 @@ var IM = require('immutable');
 export default class BinarySearchTree {
 
   constructor(data, comparator) {
-    if (!data) throw new Error('Cannot create an empty BST');
+    if (data === undefined) throw new Error('Cannot create an empty BST');
     if (IM.Map.isMap(data)) {
       this._root = BinarySearchTree.cloneRoot(data, comparator);
     } else {
@@ -51,11 +51,24 @@ export default class BinarySearchTree {
   }
 
   traverseDF(cb) {
-
+    let left = this._root.get('left'),
+        right = this._root.get('right');
+    cb(this._root.get('data'));
+    if (left) left.traverseDF(cb);
+    if (right) right.traverseDF(cb);
   }
 
   traverseBF(cb) {
-
+    let q = [], current = this;
+    while (current && current !== null) {
+      let _root = current._root,
+          left = _root.get('left'),
+          right = _root.get('right');
+      cb(_root.get('data'));
+      if (left !== null) q.push(left);
+      if (right !== null) q.push(right);
+      current = q.shift();
+    }
   }
 
   get min() {
