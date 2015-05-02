@@ -30,17 +30,18 @@ export default class BinarySearchTree {
   }
 
   find(target) {
-
+    let comparisons = this._getComparisons(target);
+    if (comparisons.baseCase) return this._root.get('data');
+    else if (comparisons.recurseLTest) return this._root.get('left').find(target);
+    else if (comparisons.recurseRTest) return this._root.get('right').find(target);
+    return null;
   }
 
   contains(target) {
-    let comparison = this._root.get('comparator')(this._root.get('data'), target),
-        baseCase = comparison === 0,
-        recurseLTest = comparison === 1 && this._root.get('left'),
-        recurseRTest = comparison === 1 && this._root.get('right');
-    if (baseCase) return true;
-    else if (recurseLTest) return this._root.get('left').contains(target);
-    else if (recurseRTest) return this._root.get('right').contains(target);
+    let comparisons = this._getComparisons(target);
+    if (comparisons.baseCase) return true;
+    else if (comparisons.recurseLTest) return this._root.get('left').contains(target);
+    else if (comparisons.recurseRTest) return this._root.get('right').contains(target);
     return false;
   }
 
@@ -82,6 +83,15 @@ export default class BinarySearchTree {
     } else {
       return new BinarySearchTree(this._root.set(side, this._root.get(side).insert(data)));
     }
+  }
+
+  _getComparisons(target) {
+    let comparison = this._root.get('comparator')(this._root.get('data'), target);
+    return {
+      baseCase: comparison === 0,
+      recurseLTest: comparison === 1 && this._root.get('left'),
+      recurseRTest: comparison === 1 && this._root.get('right')
+    };
   }
 
 }
