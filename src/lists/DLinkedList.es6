@@ -2,6 +2,7 @@ import 'core-js/shim';
 var IM = require('immutable'),
     LinkedListBase = require('./LinkedListBase');
 
+
 export default class DLinkedList extends LinkedListBase {
 
   constructor(itemOrList = []) {
