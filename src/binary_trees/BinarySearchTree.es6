@@ -2,6 +2,8 @@ import 'core-js/shim';
 var IM = require('immutable');
 
 
+// @TODO: pass comparator along anytime a new BST is generated
+
 export default class BinarySearchTree {
 
   constructor(data, comparator) {
