@@ -47,7 +47,7 @@ export default class BinarySearchTree {
   }
 
   remove(target) {
-    return this._deleteRoot(target, this, this, []);
+    return this._deleteRoot(target, this /*originalBST*/, this /*currentBST*/, [] /*ancestorStack*/);
   }
 
   traverseDF(cb) {
@@ -121,16 +121,15 @@ export default class BinarySearchTree {
 
   _deleteRoot(target, originalBST, currentBST, ancestorStack) {
     // NOT FOUND base-case
-    if (!currentBST || currentBST === null) {
+    if (!currentBST || currentBST === null)
       return BinarySearchTree.cloneRoot(originalBST._root, originalBST._root.get('comparator'));
-    }
 
     let comparisons = currentBST._getComparisons.call(currentBST, target);
 
     // MATCH base-case
     if (comparisons.baseCase) {
-      let parentBST = ancestorStack.pop();
-      let childrenTuple = [],
+      let parentBST = ancestorStack.pop(),
+          childrenTuple = [],
           left = currentBST._root.get('left'),
           right = currentBST._root.get('right');
       if (left && left !== null) childrenTuple.push(left);
