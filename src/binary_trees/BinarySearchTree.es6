@@ -152,12 +152,10 @@ export default class BinarySearchTree {
 
     // recurse left
     } else if (comparisons.recurseLTest) {
-      ancestorStack.push(currentBST);
-      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('left'), ancestorStack);
+      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('left'), ancestorStack.concat(currentBST));
     // recurse right
     } else if (comparisons.recurseRTest) {
-      ancestorStack.push(currentBST);
-      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('right'), ancestorStack);
+      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('right'), ancestorStack.concat(currentBST));
     }
   }
 
