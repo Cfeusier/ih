@@ -47,7 +47,7 @@ export default class BinarySearchTree {
   }
 
   remove(target) {
-
+    return this._deleteRoot(target, this, this, []);
   }
 
   traverseDF(cb) {
@@ -108,8 +108,8 @@ export default class BinarySearchTree {
     let comparison = this._root.get('comparator')(this._root.get('data'), target);
     return {
       baseCase: comparison === 0,
-      recurseLTest: comparison === 1 && this._root.get('left'),
-      recurseRTest: comparison === 1 && this._root.get('right')
+      recurseLTest: comparison === 1 && !!this._root.get('left'),
+      recurseRTest: comparison === -1 && !!this._root.get('right')
     };
   }
 
@@ -117,6 +117,47 @@ export default class BinarySearchTree {
     let current_root = this._root;
     while (current_root.get(side)) current_root = current_root.get(side)._root;
     return current_root;
+  }
+
+  _deleteRoot(target, originalBST, currentBST, ancestorStack) {
+    // NOT FOUND base-case
+    if (!currentBST || currentBST === null) {
+      return BinarySearchTree.cloneRoot(originalBST._root, originalBST._root.get('comparator'));
+    }
+
+    let comparisons = currentBST._getComparisons.call(currentBST, target);
+
+    // MATCH base-case
+    if (comparisons.baseCase) {
+      let parentBST = ancestorStack.pop();
+      let childrenTuple = [],
+          left = currentBST._root.get('left'),
+          right = currentBST._root.get('right');
+      if (left && left !== null) childrenTuple.push(left);
+      if (right && right !== null) childrenTuple.push(right);
+      let hasChildren = !!childrenTuple.length,
+          oneChild = childrenTuple.length === 1,
+          twoChildren = childrenTuple.length === 2;
+
+      if (!hasChildren) {
+        // NO CHILDREN, can remove safely
+      } else {
+        if (oneChild) {
+          // one child, must reattach child after removal of current
+        } else if (twoChildren) {
+          // two children, must reattach children after removal of current
+        }
+      }
+
+    // recurse left
+    } else if (comparisons.recurseLTest) {
+      ancestorStack.push(currentBST);
+      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('left'), ancestorStack);
+    // recurse right
+    } else if (comparisons.recurseRTest) {
+      ancestorStack.push(currentBST);
+      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('right'), ancestorStack);
+    }
   }
 
 }
