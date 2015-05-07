@@ -1,20 +1,32 @@
 import 'core-js/shim';
-var IM = require('immutable');
+const IM = require('immutable');
 
 
 // @TODO: pass comparator along anytime a new BST is generated
+// @TODO: #remove instance method
 
 export default class BinarySearchTree {
 
-  constructor(data, comparator) {
+  /**
+   * BinarySearchTree constructor
+   * @param {Function}  comparator, Must return {0, 1, -1} to sort subtrees
+   * @constructor
+   */
+  constructor(data, comparator = BinarySearchTree.defaultComparator) {
     if (data === undefined) throw new Error('Cannot create an empty BST');
     if (IM.Map.isMap(data)) {
       this._root = BinarySearchTree.cloneRoot(data, comparator);
     } else {
       this._root = BinarySearchTree.generateRoot(data, comparator);
     }
+    Object.freeze(this);
   }
 
+  /**
+   * O(log n) insertion - average time complexity
+   * @param   {*}  data
+   * @returns {BinarySearchTree}  A new BST is returned with the data inserted
+   */
   insert(data) {
     switch(this._root.get('comparator')(this._root.get('data'), data)) {
       case 1:
@@ -32,14 +44,24 @@ export default class BinarySearchTree {
     }
   }
 
+  /**
+   * O(log n) search - average time complexity
+   * @param   {*}  target
+   * @returns {BinarySearchTree|null}  The found subtree is returned; null if not found
+   */
   find(target) {
     let comparisons = this._getComparisons(target);
-    if (comparisons.baseCase) return this._root.get('data');
+    if (comparisons.baseCase) return this;
     else if (comparisons.recurseLTest) return this._root.get('left').find(target);
     else if (comparisons.recurseRTest) return this._root.get('right').find(target);
     return null;
   }
 
+  /**
+   * O(log n) search variation - average time complexity
+   * @param   {*}  target
+   * @returns {Boolean}  If the target is found, returns true; false if not found
+   */
   contains(target) {
     let comparisons = this._getComparisons(target);
     if (comparisons.baseCase) return true;
@@ -48,10 +70,24 @@ export default class BinarySearchTree {
     return false;
   }
 
-  remove(target) {
-    return this._deleteRoot(target, this /*originalBST*/, this /*currentBST*/, [] /*ancestorStack*/);
+
+  /**
+   * O(n) in-order traversal - asymptotically optimal
+   * @param   {BinarySearchTree} subtree, the root from which to start the traversal
+   * @param   {Function}  cb, each BST data field will be passed to cb, in-sorted order
+   */
+  traverseInOrder(subtree, cb) {
+    if (!subtree) return;
+    let _root = subtree._root, left = _root.get('left'), right = _root.get('right');
+    if (left) left.traverseInOrder(left, cb);
+    cb(_root.get('data'));
+    if (right) right.traverseInOrder(right, cb);
   }
 
+  /**
+   * O(n) depth-first traversal - average time complexity
+   * @param   {Function}  cb, each BST data field will be passed to cb, depth-first
+   */
   traverseDF(cb) {
     let left = this._root.get('left'), right = this._root.get('right');
     cb(this._root.get('data'));
@@ -59,6 +95,10 @@ export default class BinarySearchTree {
     if (right) right.traverseDF(cb);
   }
 
+  /**
+   * O(n) breadth-first traversal - average time complexity
+   * @param   {Function}  cb, each BST data field will be passed to cb, breadth-first
+   */
   traverseBF(cb) {
     let q = [], current = this;
     while (current && current !== null) {
@@ -70,12 +110,26 @@ export default class BinarySearchTree {
     }
   }
 
+  /**
+   * O(log n) BST minimum getter - average time complexity
+   * @returns {BinarySearchTree}, the minimum subtree in the current tree
+   */
   get min() {
     return this._traverseSide('left');
   }
 
+  /**
+   * O(log n) BST maximum getter - average time complexity
+   * @returns {BinarySearchTree}, the maximum subtree in the current tree
+   */
   get max() {
     return this._traverseSide('right');
+  }
+
+  get size() {
+    let count = 0, countSubTrees = () => count++;
+    this.traverseInOrder(this, countSubTrees);
+    return count;
   }
 
   static defaultComparator(left, right) {
@@ -98,6 +152,16 @@ export default class BinarySearchTree {
     return _root.set('comparator', comparator || BinarySearchTree.defaultComparator);
   }
 
+  static findInOrderPredecessor(baseBST, leftChild) {
+    currentRoot = leftChild._root;
+    let rightPointers = 0;
+    while (currentRoot.get('right')) {
+      rightPointers++;
+      currentRoot = currentRoot.get('right')._root;
+    }
+    return [rightPointers, currentRoot];
+  }
+
   _insertSide(data, side) {
     if (this._root.get(side) === null)  {
       return new BinarySearchTree(this._root.set(side, new BinarySearchTree(data)));
@@ -115,48 +179,10 @@ export default class BinarySearchTree {
     };
   }
 
-  _traverseSide(side) {
-    let current_root = this._root;
-    while (current_root.get(side)) current_root = current_root.get(side)._root;
-    return current_root;
-  }
-
-  _deleteRoot(target, originalBST, currentBST, ancestorStack) {
-    // NOT FOUND base-case
-    if (!currentBST || currentBST === null)
-      return BinarySearchTree.cloneRoot(originalBST._root, originalBST._root.get('comparator'));
-
-    let comparisons = currentBST._getComparisons.call(currentBST, target);
-
-    // MATCH base-case
-    if (comparisons.baseCase) {
-      let parentBST = ancestorStack.pop(),
-          childrenTuple = [],
-          left = currentBST._root.get('left'),
-          right = currentBST._root.get('right');
-      if (left && left !== null) childrenTuple.push(left);
-      if (right && right !== null) childrenTuple.push(right);
-      let hasChildren = !!childrenTuple.length,
-          oneChild = childrenTuple.length === 1,
-          twoChildren = childrenTuple.length === 2;
-
-      if (!hasChildren) {
-        // NO CHILDREN, can remove safely
-      } else {
-        if (oneChild) {
-          // one child, must reattach child after removal of current
-        } else if (twoChildren) {
-          // two children, must reattach children after removal of current
-        }
-      }
-
-    // recurse left
-    } else if (comparisons.recurseLTest) {
-      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('left'), ancestorStack.concat(currentBST));
-    // recurse right
-    } else if (comparisons.recurseRTest) {
-      return originalBST._deleteRoot(target, originalBST, currentBST._root.get('right'), ancestorStack.concat(currentBST));
-    }
+  _traverseSide(side, currentRoot) {
+    currentRoot = currentRoot || this._root;
+    while (currentRoot.get(side)) currentRoot = currentRoot.get(side)._root;
+    return currentRoot;
   }
 
 }
